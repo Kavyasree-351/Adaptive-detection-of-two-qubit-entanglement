@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two-qubit entanglement lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font:16px/1.55 system-ui,sans-serif}main{max-width:960px;margin:auto;padding:48px 22px}header{border-bottom:2px solid;padding-bottom:20px}h1{font-size:clamp(2rem,6vw,4rem);line-height:1.05;margin:.25em 0}h2{margin-top:1.7em}small,.mono,output,th{font-family:monospace}label{display:grid;gap:6px}form{display:flex;flex-wrap:wrap;gap:14px;align-items:end}select,input,button{font:inherit;color:#fff;background:#000;border:1px solid #fff;padding:8px;max-width:100%}input{width:110px}button{background:#fff;color:#000;cursor:pointer;font-weight:bold}button:disabled{background:#000;color:#fff;cursor:default}table{border-collapse:collapse;width:100%;margin:12px 0}th,td{text-align:left;border-bottom:1px solid;padding:8px 10px;white-space:nowrap}.scroll{overflow-x:auto}.status{border:1px solid;padding:12px;margin:16px 0;min-height:50px}a{color:inherit}details{margin-top:24px}summary{cursor:pointer}:focus-visible{outline:2px dashed #fff;outline-offset:3px}
+</style>
+<main>
+<header><small>QUANTUM ARCHITECTURE AND PROGRAMMING / PROJECT SIMULATION</small>
+<h1>Two-qubit entanglement lab</h1>
+<p>Watch a trained classifier decide whether another batch of Pauli measurements is needed.</p></header>
+<h2>Run a state</h2>
+<form id="controls">
+<label>State<select id="state"></select></label>
+<label>Depolarizing noise<select id="noise"></select></label>
+<label>Shots per observable<select id="shots"></select></label>
+<label>Sampling seed<input id="seed" type="number" value="42" min="0" max="4294967295" required></label>
+<button type="submit">Start run</button>
+</form>
+<p id="policy" class="mono"></p>
+<div class="status" id="status" role="status">Choose a state and start a run.</div>
+<button id="next" disabled>Measure next batch</button>
+<div class="scroll"><table>
+<thead><tr><th>Budget</th><th>New observables</th><th>P(entangled)</th><th>Decision</th></tr></thead><tbody id="trace"></tbody>
+</table></div>
+<details><summary>Measured expectation values</summary><p id="observations" class="mono"></p></details>
+<h2>Held-out benchmark</h2>
+<p>Each condition uses the same 3,600 held-out states. Accuracy is among answered cases. Coverage is the fraction answered. False positives are measured over all separable cases.</p>
+<label>Noise / shots per observable<select id="scenario"></select></label>
+<div class="scroll"><table><thead><tr><th>Policy</th><th>Mean observables</th><th>Accuracy</th><th>Coverage</th><th>False positives</th><th>Negativity MAE</th></tr></thead><tbody id="benchmark"></tbody></table></div>
+<p id="boundary"></p>
+<figure style="margin:24px 0">
+<svg id="plot" viewBox="0 0 560 230" width="560" style="max-width:100%;height:auto" role="img" aria-label="Answered accuracy versus average observables"></svg>
+<figcaption>Circles show fixed budgets. The square shows the adaptive policy. See the table for coverage.</figcaption>
+</figure>
+<p>The demo uses simulated outcomes and trained model weights. For each measured Pauli observable, the program samples ±1 outcomes, then uses their average as the model input. Shots are allocated independently to each observable.</p>
+</main>
+<script>
+const data = __EXPERIMENT__;
+const el = id => document.getElementById(id);
+const percent = x => x == null ? '—' : (100*x).toFixed(1)+'%';
+const dot = (x,y) => x.reduce((s,v,i)=>s+v*y[i],0);
+function addOption(select,label,value) { select.add(new Option(label,value)); }
+data.demo.forEach((d,i)=>addOption(el('state'),d.label,i));
+[0,2,5,10,15,20].forEach(n=>addOption(el('noise'),n+'%',n/100));
+[100,500,1000,5000,0].forEach(n=>addOption(el('shots'),n?n.toLocaleString():'Ideal',n));
+el('shots').value='500';
+el('policy').textContent='STOPPING THRESHOLD '+percent(data.threshold)+' / MAX '+data.budgets.at(-1)+' OBSERVABLES';
+Object.keys(data.results).forEach(k=>addOption(el('scenario'),k,k));
+el('scenario').value='10% / 500';
+function row(table, cells) {
+  const tr=el(table).insertRow();
+  cells.forEach(c=>tr.insertCell().textContent=c);
+}
+function benchmark() {
+  const r=data.results[el('scenario').value];
+  el('benchmark').replaceChildren();
+  function show(label,m,mae) {
+    row('benchmark',[label,m.cost.toFixed(2),percent(m.accuracy),percent(m.coverage),percent(m.fpr),mae==null?'—':mae.toFixed(4)]);
+  }
+  r.fixed.forEach((m,i)=>show('Fixed '+data.budgets[i],m,r.mae[i]));
+  show('Adaptive',r.adaptive);
+  const x = n => 70+(n-3)*36;
+  const y = accuracy => 185-accuracy*155;
+  const ticks=[0,.25,.5,.75,1].map(t=>'<text x="58" y="'+(y(t)+4)+'" text-anchor="end">'+Math.round(100*t)+'%</text>').join('');
+  const budgets=data.budgets.map(b=>'<text x="'+x(b)+'" y="203" text-anchor="middle">'+b+'</text>').join('');
+  const fixed=r.fixed.map(m=>'<circle cx="'+x(m.cost)+'" cy="'+y(m.accuracy)+'" r="4"/>').join('');
+  const a=r.adaptive;
+  const square=a.accuracy==null?'':'<rect x="'+(x(a.cost)-6)+'" y="'+(y(a.accuracy)-6)+'" width="12" height="12" fill="none" stroke="white"/>';
+  el('plot').innerHTML='<g fill="white" font-size="12">'+ticks+budgets+fixed+square+'<text x="70" y="17">Answered accuracy</text><text x="286" y="223" text-anchor="middle">Mean observables</text></g><path d="M70 30V185H502" fill="none" stroke="white"/>';
+  el('boundary').textContent='Near-boundary subset ('+r.near_n+' states): adaptive accuracy '+percent(r.near.accuracy)+', coverage '+percent(r.near.coverage)+', false positives '+percent(r.near.fpr)+', mean observables '+r.near.cost.toFixed(2)+'.';
+}
+el('scenario').addEventListener('change',benchmark);
+benchmark();
+let run;
+function random(seed) {
+  let a=seed>>>0;
+  return ()=>{a=(Math.imul(1664525,a)+1013904223)>>>0;return a/4294967296;};
+}
+function sample(mean,shots,rng) {
+  if(!shots) return mean;
+  const p=Math.max(0,Math.min(1,(1+mean)/2));
+  let plus=0;
+  for(let i=0;i<shots;i++) if(rng()<p) plus++;
+  return 2*plus/shots-1;
+}
+function step() {
+  const i=run.stage++;
+  const model=data.models[i], budget=data.budgets[i], from=run.x.length;
+  for(let j=from;j<budget;j++) run.x.push(sample((1-run.noise)*run.state.means[j],run.shots,run.rng));
+  const f=[1,...run.x,...run.x.map(v=>v*v)];
+  for(let j=0;j<budget;j++) for(let k=0;k<j;k++) f.push(run.x[j]*run.x[k]);
+  const input=f.slice(1);
+  const h=model.b.map((b,k)=>Math.tanh(b+input.reduce((s,v,j)=>s+v*model.w[j][k],0)));
+  const p=1/(1+Math.exp(-(dot(h,model.v)+model.c)));
+  const confident=Math.max(p,1-p)>=data.threshold;
+  const last=i===data.budgets.length-1;
+  const label=confident?(p>=.5?'Entangled':'Separable'):(last?'Uncertain':'Measure more');
+  row('trace',[budget,data.names.slice(from,budget).join(', '),percent(p),label]);
+  el('observations').textContent=run.x.map((v,j)=>data.names[j]+' = '+v.toFixed(3)).join('   |   ');
+  el('next').disabled=confident||last;
+  if(!el('next').disabled) {
+    el('status').textContent='Confidence '+percent(Math.max(p,1-p))+' is below threshold. Take the next batch.';
+    return;
+  }
+  const estimate=Math.min(.5,Math.max(0,dot(f,data.reg[i])));
+  const truth=-run.state.eig.reduce((s,v)=>s+Math.min(0,(1-run.noise)*v+run.noise/4),0);
+  el('status').textContent=label+' after '+budget+' observables'+(run.shots?' ('+(budget*run.shots).toLocaleString()+' shots)':' (ideal expectations)')+'. Ground truth: '+(truth>1e-9?'entangled':'separable')+'. Negativity: estimated '+estimate.toFixed(4)+', true '+Math.abs(truth).toFixed(4)+'.';
+}
+el('controls').addEventListener('submit',e=>{
+  e.preventDefault();
+  run={state:data.demo[+el('state').value],noise:+el('noise').value,shots:+el('shots').value,
+       rng:random(+el('seed').value),x:[],stage:0};
+  el('trace').replaceChildren();
+  step();
+});
+el('next').addEventListener('click',step);
+</script>
+</html>
+
+
