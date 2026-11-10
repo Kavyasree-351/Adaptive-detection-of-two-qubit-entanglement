@@ -30,6 +30,8 @@
 <label>Noise / shots per observable<select id="scenario"></select></label>
 <div class="scroll"><table><thead><tr><th>Policy</th><th>Mean observables</th><th>Accuracy</th><th>Coverage</th><th>False positives</th><th>Negativity MAE</th></tr></thead><tbody id="benchmark"></tbody></table></div>
 <p id="boundary"></p>
+<p id="stopping"></p>
+<p>Adaptive negativity MAE covers answered cases. Fixed-budget MAE covers all test cases.</p>
 <figure style="margin:24px 0">
 <svg id="plot" viewBox="0 0 560 230" width="560" style="max-width:100%;height:auto" role="img" aria-label="Answered accuracy versus average observables"></svg>
 <figcaption>Circles show fixed budgets. The square shows the adaptive policy. See the table for coverage.</figcaption>
@@ -60,7 +62,8 @@ function benchmark() {
     row('benchmark',[label,m.cost.toFixed(2),percent(m.accuracy),percent(m.coverage),percent(m.fpr),mae==null?'—':mae.toFixed(4)]);
   }
   r.fixed.forEach((m,i)=>show('Fixed '+data.budgets[i],m,r.mae[i]));
-  show('Adaptive',r.adaptive);
+  show('Adaptive',r.adaptive,r.adaptive_mae);
+  el('stopping').textContent='Accepted predictions by budget: '+data.budgets.map((b,i)=>b+' observables: '+r.stop_counts[i].toLocaleString()).join(' · ')+'. Abstained: '+r.abstained.toLocaleString()+'.';
   const x = n => 70+(n-3)*36;
   const y = accuracy => 185-accuracy*155;
   const ticks=[0,.25,.5,.75,1].map(t=>'<text x="58" y="'+(y(t)+4)+'" text-anchor="end">'+Math.round(100*t)+'%</text>').join('');
@@ -118,5 +121,3 @@ el('controls').addEventListener('submit',e=>{
 el('next').addEventListener('click',step);
 </script>
 </html>
-
-

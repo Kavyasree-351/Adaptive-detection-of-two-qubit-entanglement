@@ -21,7 +21,7 @@ The selected threshold was **69.0%**.
 | Fixed neural (9) | 9.00 | 92.0% | 100.0% | 12.8% | 0.0180 |
 | Fixed neural (12) | 12.00 | 91.3% | 100.0% | 11.0% | 0.0177 |
 | Fixed neural (15) | 15.00 | 91.0% | 100.0% | 15.2% | 0.0179 |
-| Adaptive neural | 4.80 | 89.8% | 96.6% | 17.9% | — |
+| Adaptive neural | 4.80 | 89.8% | 96.6% | 17.9% | 0.0612 |
 | Logistic regression (3) | 3.00 | 69.1% | 100.0% | 100.0% | — |
 | Logistic regression (6) | 6.00 | 69.1% | 100.0% | 100.0% | — |
 | Logistic regression (9) | 9.00 | 69.1% | 100.0% | 100.0% | — |
@@ -69,7 +69,9 @@ In the 683 near-boundary test states (absolute minimum partial-transpose eigenva
 
 ## Interpretation and limits
 
-At the main test condition, negativity mean absolute error changed from 0.0746 with three observables to 0.0179 with fifteen. Quantification is reported at fixed budgets. The adaptive decision is driven by classification confidence, so the demo’s negativity estimate at stopping does not have a separate uncertainty guarantee.
+At 10% depolarization and 500 shots, accepted predictions stopped at 3 observables (2,238 states), 6 observables (905 states), 9 observables (265 states), 12 observables (40 states), 15 observables (31 states). The policy abstained on 121 states.
+
+At the main test condition, negativity mean absolute error changed from 0.0746 with three observables to 0.0179 with fifteen. The adaptive MAE covers answered cases only. Fixed-budget MAE covers all test cases. The adaptive decision is driven by classification confidence, so the demo’s negativity estimate at stopping does not have a separate uncertainty guarantee.
 
 The model scores were thresholded on validation data without a separate probability calibration step. The reported accuracy is specific to the simulated state mixture, noise channel and measurement order. The experiment uses one split and seed, and all results are from simulation.
 

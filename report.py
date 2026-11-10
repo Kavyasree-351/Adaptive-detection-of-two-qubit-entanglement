@@ -30,7 +30,7 @@ def write_report(path,data):
         err = '—' if mae is None else f'{mae:.4f}'
         return f"| {name} | {m['cost']:.2f} | {pct(m['accuracy'])} | {pct(m['coverage'])} | {pct(m['fpr'])} | {err} |"
     lines += [row(f'Fixed neural ({b})',m,r) for b,m,r in zip(data['budgets'],result['fixed'],result['mae'])]
-    lines += [row('Adaptive neural',a)]
+    lines += [row('Adaptive neural',a,result['adaptive_mae'])]
     for name, rows in result['baselines'].items():
         lines += [row(f'{name} ({b})',m) for b,m in zip(data['budgets'],rows)]
     lines += [
@@ -47,11 +47,14 @@ def write_report(path,data):
     for name,r in data['results'].items():
         m = r['adaptive']
         lines.append(f"| {name} | {m['cost']:.2f} | {pct(m['accuracy'])} | {pct(m['coverage'])} | {pct(m['fpr'])} | {pct(r['fixed'][-1]['accuracy'])} |")
+    stops = ', '.join(f'{b} observables ({n:,} states)' for b,n in zip(data['budgets'],result['stop_counts']))
     lines += [
         '',
         '## Interpretation and limits',
         '',
-        f"At the main test condition, negativity mean absolute error changed from {result['mae'][0]:.4f} with three observables to {result['mae'][-1]:.4f} with fifteen. Quantification is reported at fixed budgets. The adaptive decision is driven by classification confidence, so the demo\u2019s negativity estimate at stopping does not have a separate uncertainty guarantee.",
+        f'At 10% depolarization and 500 shots, accepted predictions stopped at {stops}. The policy abstained on {result["abstained"]:,} states.',
+        '',
+        f"At the main test condition, negativity mean absolute error changed from {result['mae'][0]:.4f} with three observables to {result['mae'][-1]:.4f} with fifteen. The adaptive MAE covers answered cases only. Fixed-budget MAE covers all test cases. The adaptive decision is driven by classification confidence, so the demo\u2019s negativity estimate at stopping does not have a separate uncertainty guarantee.",
         '',
         'The model scores were thresholded on validation data without a separate probability calibration step. The reported accuracy is specific to the simulated state mixture, noise channel and measurement order. The experiment uses one split and seed, and all results are from simulation.',
         '',
@@ -60,4 +63,3 @@ def write_report(path,data):
         'With Python and NumPy installed, run `python experiment.py` in the source folder. The run regenerates the offline simulation and this report. Open `Simulation.html` in a browser to step through a state and inspect the held-out benchmark.',
     ]
     (path/'Short Report.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-

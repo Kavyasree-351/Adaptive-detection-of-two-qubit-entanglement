@@ -173,9 +173,17 @@ def main():
         xx,nn,margin = physical(test,noise,shots,RNG)
         yy,pp,fixed,mae = assess(models,reg,xx,nn)
         pred,cost = adaptive(pp,threshold)
+        answered = pred>=0
+        estimates = np.empty(len(nn))
+        for budget, model in zip(BUDGETS, reg):
+            stop = cost == budget
+            estimates[stop] = np.clip(features(xx[stop,:budget]) @ model, 0, .5)
+        adaptive_mae = float(np.mean(abs(estimates[answered]-nn[answered]))) if answered.any() else None
+        stop_counts = [int(((cost == b) & answered).sum()) for b in BUDGETS]
         near = abs(margin)<=.025
         results[name] = dict(fixed=fixed, mae=mae, adaptive=metrics(pred,yy,cost),
-                             near=metrics(pred[near],yy[near],cost[near]), near_n=int(near.sum()))
+                             near=metrics(pred[near],yy[near],cost[near]), near_n=int(near.sum()), adaptive_mae=adaptive_mae,
+                             stop_counts=stop_counts, abstained=int((~answered).sum()))
         if name=='10% / 500':
             results[name]['baselines'] = {
                 'Logistic regression':[metrics(probability(m,xx[:,:b])>=.5,yy,b)
@@ -201,4 +209,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
