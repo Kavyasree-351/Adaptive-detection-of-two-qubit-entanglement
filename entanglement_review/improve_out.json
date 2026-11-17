@@ -1,0 +1,112 @@
+{
+ "original_training_mix": {
+  "threshold": 0.69,
+  "in_distribution": {
+   "cost": 4.8425,
+   "coverage": 0.9617,
+   "accuracy": 0.8937,
+   "fpr": 0.1815
+  },
+  "ood_product_states_FPR": 0.6508,
+  "P_entangled_for_00_by_budget": [
+   1.0,
+   0.996,
+   0.999,
+   0.984,
+   0.958
+  ]
+ },
+ "augmented_with_product_states": {
+  "threshold": 0.74,
+  "in_distribution": {
+   "cost": 7.3892,
+   "coverage": 0.9192,
+   "accuracy": 0.9027,
+   "fpr": 0.044
+  },
+  "ood_product_states_FPR": 0.1717,
+  "P_entangled_for_00_by_budget": [
+   0.955,
+   0.872,
+   0.789,
+   0.281,
+   0.215
+  ]
+ },
+ "hybrid_neural_then_tomography": {
+  "0%/ideal": {
+   "neural_adaptive": {
+    "cost": 4.5775,
+    "coverage": 0.9728,
+    "accuracy": 0.9132,
+    "fpr": 0.1564,
+    "settings": 4.34
+   },
+   "hybrid": {
+    "cost": 4.6,
+    "coverage": 1.0,
+    "accuracy": 0.9208,
+    "fpr": 0.1551,
+    "settings": 4.34
+   }
+  },
+  "10%/500": {
+   "neural_adaptive": {
+    "cost": 4.8425,
+    "coverage": 0.9617,
+    "accuracy": 0.8937,
+    "fpr": 0.1815,
+    "settings": 4.53
+   },
+   "hybrid": {
+    "cost": 4.8717,
+    "coverage": 1.0,
+    "accuracy": 0.8914,
+    "fpr": 0.2049,
+    "settings": 4.53
+   }
+  },
+  "10%/5000": {
+   "neural_adaptive": {
+    "cost": 4.8183,
+    "coverage": 0.9594,
+    "accuracy": 0.9074,
+    "fpr": 0.1509,
+    "settings": 4.51
+   },
+   "hybrid": {
+    "cost": 4.8442,
+    "coverage": 1.0,
+    "accuracy": 0.9133,
+    "fpr": 0.1518,
+    "settings": 4.51
+   }
+  }
+ },
+ "asymmetric_thresholds_10_500": {
+  "ent>=0.69, sep>=0.69": {
+   "cost": 4.8425,
+   "coverage": 0.9617,
+   "accuracy": 0.8937,
+   "fpr": 0.1815
+  },
+  "ent>=0.8, sep>=0.69": {
+   "cost": 5.5917,
+   "coverage": 0.9228,
+   "accuracy": 0.9133,
+   "fpr": 0.0943
+  },
+  "ent>=0.9, sep>=0.69": {
+   "cost": 6.51,
+   "coverage": 0.8569,
+   "accuracy": 0.9274,
+   "fpr": 0.0305
+  },
+  "ent>=0.95, sep>=0.69": {
+   "cost": 7.1542,
+   "coverage": 0.8075,
+   "accuracy": 0.9312,
+   "fpr": 0.009
+  }
+ }
+}
