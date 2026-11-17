@@ -141,7 +141,7 @@ def main():
         mlp = make_pipeline(StandardScaler(), MLPClassifier((64, 64), alpha=1e-3, max_iter=400,
                             early_stopping=True, random_state=0)).fit(f_tr, yt)
         repo_lin = ex.probability(ex.fit(xt[:, :b], yt, 0, 60 + b), xx[:, :b]) >= .5
-        fair[b] = dict(repo_logistic_raw=summary(repo_lin.astype(int), yy, np.full(len(yy), b)),
+        fair[b] = dict(repo_logistic_quadratic=summary(repo_lin.astype(int), yy, np.full(len(yy), b)),
                        logistic_quadratic=summary(lr.predict(f_te).astype(int), yy, np.full(len(yy), b)),
                        mlp_64x64=summary(mlp.predict(f_te).astype(int), yy, np.full(len(yy), b)),
                        repo_neural=summary((pp[B.index(b)] >= .5).astype(int), yy, np.full(len(yy), b)))

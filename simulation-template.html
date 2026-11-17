@@ -22,7 +22,7 @@
 <div class="status" id="status" role="status">Choose a state and start a run.</div>
 <button id="next" disabled>Measure next batch</button>
 <div class="scroll"><table>
-<thead><tr><th>Budget</th><th>New observables</th><th>P(entangled)</th><th>Decision</th></tr></thead><tbody id="trace"></tbody>
+<thead><tr><th>Budget</th><th>New observables</th><th>Entanglement score</th><th>Decision</th></tr></thead><tbody id="trace"></tbody>
 </table></div>
 <details><summary>Measured expectation values</summary><p id="observations" class="mono"></p></details>
 <h2>Held-out benchmark</h2>
@@ -37,11 +37,13 @@
 <figcaption>Circles show fixed budgets. The square shows the adaptive policy. See the table for coverage.</figcaption>
 </figure>
 <p>The demo uses simulated outcomes and trained model weights. For each measured Pauli observable, the program samples ±1 outcomes, then uses their average as the model input. Shots are allocated independently to each observable.</p>
+<p>Scores are not calibrated probabilities or entanglement certificates. Predictions can be wrong, especially near the boundary. The reference truth shown after stopping is for evaluation only and is not used to make decisions.</p>
 </main>
 <script>
 const data = __EXPERIMENT__;
 const el = id => document.getElementById(id);
 const percent = x => x == null ? '—' : (100*x).toFixed(1)+'%';
+const number = x => x == null ? '—' : x.toFixed(2);
 const dot = (x,y) => x.reduce((s,v,i)=>s+v*y[i],0);
 function addOption(select,label,value) { select.add(new Option(label,value)); }
 data.demo.forEach((d,i)=>addOption(el('state'),d.label,i));
@@ -59,7 +61,7 @@ function benchmark() {
   const r=data.results[el('scenario').value];
   el('benchmark').replaceChildren();
   function show(label,m,mae) {
-    row('benchmark',[label,m.cost.toFixed(2),percent(m.accuracy),percent(m.coverage),percent(m.fpr),mae==null?'—':mae.toFixed(4)]);
+    row('benchmark',[label,number(m.cost),percent(m.accuracy),percent(m.coverage),percent(m.fpr),mae==null?'—':mae.toFixed(4)]);
   }
   r.fixed.forEach((m,i)=>show('Fixed '+data.budgets[i],m,r.mae[i]));
   show('Adaptive',r.adaptive,r.adaptive_mae);
@@ -72,7 +74,7 @@ function benchmark() {
   const a=r.adaptive;
   const square=a.accuracy==null?'':'<rect x="'+(x(a.cost)-6)+'" y="'+(y(a.accuracy)-6)+'" width="12" height="12" fill="none" stroke="white"/>';
   el('plot').innerHTML='<g fill="white" font-size="12">'+ticks+budgets+fixed+square+'<text x="70" y="17">Answered accuracy</text><text x="286" y="223" text-anchor="middle">Mean observables</text></g><path d="M70 30V185H502" fill="none" stroke="white"/>';
-  el('boundary').textContent='Near-boundary subset ('+r.near_n+' states): adaptive accuracy '+percent(r.near.accuracy)+', coverage '+percent(r.near.coverage)+', false positives '+percent(r.near.fpr)+', mean observables '+r.near.cost.toFixed(2)+'.';
+  el('boundary').textContent='Near-boundary subset ('+r.near_n+' states): adaptive accuracy '+percent(r.near.accuracy)+', coverage '+percent(r.near.coverage)+', false positives '+percent(r.near.fpr)+', mean observables '+number(r.near.cost)+'.';
 }
 el('scenario').addEventListener('change',benchmark);
 benchmark();

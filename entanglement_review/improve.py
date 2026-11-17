@@ -1,9 +1,9 @@
 """Prototype fixes. Usage: python improve.py REPO_DIR"""
 import sys, json
 import numpy as np
-sys.path.insert(0, sys.argv[1]); sys.path.insert(0, '/home/claude/tests')
+sys.path.insert(0, sys.argv[1])
 import experiment as ex
-import analysis as an  # noqa  (re-runs main; suppressed below)
+import analysis as an
 
 B = ex.BUDGETS
 
@@ -107,4 +107,5 @@ def main():
     print(json.dumps(out, indent=1))
 
 
-main()
+if __name__ == '__main__':
+    main()

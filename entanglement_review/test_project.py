@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-REPO = Path(os.environ.get("REPO", "/home/claude/run/repo"))
+REPO = Path(os.environ.get("REPO", Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(REPO))
 import experiment as ex  # noqa: E402
 import report  # noqa: E402
