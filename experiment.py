@@ -164,6 +164,11 @@ def regressor(x,y):
 
 def metrics(pred,y,cost):
     pred,y = np.asarray(pred),np.asarray(y,dtype=bool)
+    if pred.shape != y.shape or pred.ndim != 1 or not np.isin(pred,[-1,0,1]).all():
+        raise ValueError('Predictions and labels must be matching vectors; predictions are -1/0/1.')
+    costs=np.asarray(cost)
+    if costs.ndim > 1 or (costs.ndim == 1 and costs.shape != y.shape) or not np.isfinite(costs).all() or np.any(costs<0):
+        raise ValueError('Costs must be finite nonnegative scalars or matching vectors.')
     if not len(y):
         return dict(cost=None,coverage=None,accuracy=None,fpr=None,wrong=None)
     answered = pred>=0
@@ -173,7 +178,11 @@ def metrics(pred,y,cost):
                 wrong=float(((pred!=y)&answered).mean()))
 
 def adaptive(probs, threshold):
+    if not .5 <= threshold <= 1 or not 1 <= len(probs) <= len(BUDGETS):
+        raise ValueError('Invalid threshold or stage count.')
     n = len(probs[0])
+    if any(np.asarray(p).shape != (n,) or not np.isfinite(p).all() or np.any((p<0)|(p>1)) for p in probs):
+        raise ValueError('Every stage needs matching finite probability vectors in [0,1].')
     pred = np.full(n,-1)
     cost = np.full(n,BUDGETS[-1])
     for b,p in zip(BUDGETS,probs):
@@ -260,7 +269,8 @@ def main():
     (HERE/'experiment_results.json').write_text(json.dumps(
         {k:v for k,v in data.items() if k not in ('models','reg')},indent=2,allow_nan=False),encoding='utf-8')
     from report import write_report
-    write_report(HERE,data)
+    # The published report is rendered from the actual saved result artifact.
+    write_report(HERE,json.loads((HERE/'experiment_results.json').read_text(encoding='utf-8')))
 
 if __name__ == '__main__':
     main()
